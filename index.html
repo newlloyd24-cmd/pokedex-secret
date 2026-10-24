@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#8f1018">
+<title>Les 3 Pokédex secrets</title>
+<style>
+:root{--bg:#57080d;--panel:#7f1018;--panel2:#9e1722;--text:#fff7f7;--muted:#f0c4c7;--gold:#ffe08a;--pink:#ff9bb5;--blue:#a8d8ff;--red:#ff7272}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#c72a36 0,#7b0b14 52%,#39040a 100%);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+header{padding:28px 18px 18px;text-align:center}header h1{font-size:clamp(1.6rem,5vw,2.5rem);margin:0 0 6px}header p{margin:0;color:var(--muted)}
+main{max-width:1200px;margin:auto;padding:0 14px 40px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0 18px}
+.tab{border:1px solid #465173;background:var(--panel);color:var(--text);padding:14px 8px;border-radius:15px;font-weight:800;font-size:1rem;cursor:pointer}
+.tab.active{outline:2px solid var(--gold);background:#303a5c}.tab small{display:block;color:var(--muted);font-weight:500;font-size:.75rem}
+.panel{background:rgba(111,13,23,.96);border:1px solid #e05c66;border-radius:20px;padding:16px}
+.summary{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}.summary h2{margin:0}.count{color:var(--gold);font-weight:800}
+.tools{display:flex;gap:8px;margin:16px 0;flex-wrap:wrap}.tools input,.tools select{min-width:0;flex:1;background:#4d080f;color:var(--text);border:1px solid #d45b65;border-radius:11px;padding:12px;font:inherit}
+.btn{border:0;border-radius:11px;padding:11px 14px;font:inherit;font-weight:750;cursor:pointer;background:var(--gold);color:#242036}.btn.secondary{background:#354061;color:var(--text);border:1px solid #596587}.btn:active,.tab:active{transform:scale(.98)}
+.note{color:var(--muted);font-size:.9rem;margin:8px 0 14px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:7px}
+.card{background:linear-gradient(155deg,#a91c29,#6d0d16);border:1px solid #d45b65;border-radius:12px;padding:6px 5px;text-align:center;min-width:0}
+.card img{width:100%;max-width:100px;aspect-ratio:1;object-fit:contain;display:block;margin:auto;cursor:pointer;filter:grayscale(1) brightness(.22);transition:filter .25s,transform .25s}
+.card.unlocked img{filter:none}.card img:hover{transform:scale(1.05)}
+.card .name{font-weight:800;text-transform:capitalize;overflow-wrap:anywhere;margin:4px 0 2px}.card .number{font-size:.75rem;color:var(--muted)}.card .status{font-size:.75rem;color:var(--gold);margin-top:4px}
+.empty{padding:35px 10px;text-align:center;color:var(--muted)}
+footer{text-align:center;color:var(--muted);font-size:.8rem;padding:18px}
+dialog{border:1px solid #647095;border-radius:20px;background:#1b223b;color:var(--text);max-width:390px;width:calc(100% - 28px);padding:22px;box-shadow:0 20px 80px #0009}
+dialog::backdrop{background:#050713cc;backdrop-filter:blur(4px)}dialog h3{margin:0 0 7px}dialog p{color:var(--muted);margin:0 0 15px}
+.pin{width:100%;font-size:1.5rem;letter-spacing:.45rem;text-align:center;background:#10162a;border:1px solid #566184;color:white;padding:13px;border-radius:12px;margin-bottom:12px}
+.error{min-height:22px;color:#ff9999;font-size:.9rem}.modalactions{display:flex;gap:8px}.modalactions>*{flex:1}
+.loading{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--muted);gap:10px}
+.spinner{width:18px;height:18px;border:3px solid #536080;border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
+.stats{display:grid;gap:7px}.statrow{display:grid;grid-template-columns:1fr 34px;gap:5px;font-size:.88rem;color:var(--muted)}.statrow strong{color:var(--text);text-align:right}.bar{grid-column:1/3;background:#10162a;border-radius:20px;height:6px;overflow:hidden}.bar i{display:block;height:100%;background:var(--gold);border-radius:20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:480px){.grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.card{padding:5px 3px}.card .name{font-size:.82rem}.tab{font-size:.9rem}.panel{padding:11px}}
+</style>
+</head>
+<body>
+<header><h1>🔐 Les 3 Pokédex secrets</h1><p>Une collection mystérieuse… révélée par le maître du jeu.</p></header>
+<main>
+  <nav class="tabs" aria-label="Choisir un Pokédex">
+    <button class="tab active" data-owner="Papa">🔴 Papa<small id="count-Papa">0 capturés</small></button>
+    <button class="tab" data-owner="Lucie">🩷 Lucie<small id="count-Lucie">0 capturés</small></button>
+    <button class="tab" data-owner="Ethan">🔵 Ethan<small id="count-Ethan">0 capturés</small></button>
+  </nav>
+  <section class="panel">
+    <div class="summary"><h2 id="ownerTitle">Pokédex de Papa</h2><div class="count" id="progress">0 capturés</div></div>
+    <div class="tools">
+      <input id="search" type="search" placeholder="Rechercher un Pokémon…" aria-label="Rechercher un Pokémon">
+      <select id="filter" aria-label="Filtrer la collection"><option value="all">Tous (y compris secrets)</option><option value="locked">Pokémon secrets</option><option value="unlocked">Pokémon révélés</option><option value="regional">Formes régionales</option><option value="mega">Méga-Évolutions</option><option value="gmax">Formes Gigamax</option><option value="recent">Derniers capturés</option></select>
+    </div>
+    <div class="tools"><button class="btn" id="randomUnlock">🎲 Débloquer un Pokémon au hasard</button><button class="btn secondary" id="recentBtn">🕒 Voir les derniers capturés</button></div>
+    <p class="note" id="note">Touche une image secrète pour entrer le code maître. La progression de chaque dresseur est séparée.</p>
+    <div id="status" class="loading"><span class="spinner"></span> Chargement du Pokédex officiel…</div>
+    <div id="grid" class="grid" hidden></div>
+    <div class="tools"><button class="btn secondary" id="export">Exporter les sauvegardes</button><button class="btn secondary" id="importBtn">Importer une sauvegarde</button><button class="btn secondary" id="reset">Réinitialiser ce Pokédex</button><input id="importFile" type="file" accept="application/json" hidden></div>
+    <p class="note">La collection inclut les Pokémon et leurs formes répertoriées par PokéAPI, dont les formes régionales, les Méga-Évolutions et les formes Gigamax. Une connexion Internet est nécessaire. Les déblocages sont conservés sur cet appareil.</p>
+  </section>
+</main>
+<footer>Fan project non officiel, sans affiliation avec Nintendo, Game Freak ou The Pokémon Company.</footer>
+<dialog id="pinDialog">
+  <h3 id="dialogTitle">Débloquer ce Pokémon ?</h3>
+  <p>Entre le code du maître du jeu pour révéler cette entrée dans le Pokédex sélectionné.</p>
+  <form id="pinForm">
+    <input class="pin" id="pinInput" type="password" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="••••" aria-label="Code à 4 chiffres" autocomplete="off" required>
+    <div class="error" id="pinError"></div>
+    <div class="modalactions"><button class="btn secondary" type="button" id="cancel">Annuler</button><button class="btn" type="submit">Débloquer</button></div>
+  </form>
+</dialog>
+<dialog id="infoDialog">
+  <div id="infoContent"><div class="loading"><span class="spinner"></span> Chargement des informations…</div></div>
+  <div class="modalactions" style="margin-top:16px"><button class="btn secondary" id="closeInfo" type="button">Fermer</button></div>
+</dialog>
+<script>
+const PIN='1202';
+const STORAGE='threeSecretPokedex_v1';
+let owner='Papa', allPokemon=[], speciesOrder=[], pending=null;\nconst speciesCache = new Map();\nconst captureNotes = JSON.parse(localStorage.getItem('pokedexCaptureNotes')||'{}');
+let saved={Papa:[],Lucie:[],Ethan:[]};
+const $=id=>document.getElementById(id);
+function loadSaved(){try{const x=JSON.parse(localStorage.getItem(STORAGE)||'{}');for(const o of ['Papa','Lucie','Ethan'])saved[o]=Array.isArray(x[o])?x[o]:[]}catch(e){}}
+function persist(){try{localStorage.setItem(STORAGE,JSON.stringify(saved))}catch(e){alert('Impossible de sauvegarder localement sur cet appareil. Utilise Exporter les sauvegardes.')}updateCounts()}
+function pretty(n){return n.replace(/-/g,' ').replace(/\b[a-z]/g,c=>c.toUpperCase()).replace('Mr Mime','Mr. Mime').replace('Mime Jr','Mime Jr.')}
+function getId(url){const m=url.match(/\/pokemon\/(\d+)\/?$/);return m?Number(m[1]):0}
+function imageUrl(id){return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${id}.png`}
+function formCategory(name){
+ const n=name.toLowerCase();
+ if(/(^|-)gmax($|-)|gigantamax/.test(n))return 'gmax';
+ if(/(^|-)mega($|-)/.test(n))return 'mega';
+ if(/(^|-)(alola|alolan|galar|galarian|hisui|hisuian|paldea|paldean)(-|$)/.test(n))return 'regional';
+ return 'base';
+}
+function categoryLabel(category){return ({regional:'Forme régionale',mega:'Méga-Évolution',gmax:'Gigamax'})[category]||'Pokémon'}
+function cap(s){return s?s.charAt(0).toUpperCase()+s.slice(1):'—'}
+function cleanText(s){return (s||'').replace(/[\\n\\f]/g,' ').replace(/\\s+/g,' ').trim()}
+async function getFrenchSpecies(p){
+ const speciesId = p.dex || p.id;
+ if(speciesCache.has(speciesId)) return speciesCache.get(speciesId);
+ const promise = (async()=>{
+  const r=await fetch(`https://pokeapi.co/api/v2/pokemon-species/${speciesId}`);
+  if(!r.ok) throw Error('Espèce indisponible');
+  const s=await r.json();
+  const frName=(s.names||[]).find(x=>x.language.name==='fr')?.name;
+  const frDesc=(s.flavor_text_entries||[]).find(x=>x.language.name==='fr');
+  const frGenus=(s.genera||[]).find(x=>x.language.name==='fr')?.genus;
+  return {name:frName||pretty(p.name), description:frDesc?cleanText(frDesc.flavor_text):'Aucune description du Pokédex disponible en français pour cette entrée.', genus:frGenus||''};
+ })();
+ speciesCache.set(speciesId,promise);
+ try{return await promise}catch(e){speciesCache.delete(speciesId);return {name:pretty(p.name),description:'La description française est momentanément indisponible.',genus:''}}
+}
+function englishToFrenchType(type){
+ const types={normal:'Normal',fire:'Feu',water:'Eau',electric:'Électrik',grass:'Plante',ice:'Glace',fighting:'Combat',poison:'Poison',ground:'Sol',flying:'Vol',psychic:'Psy',bug:'Insecte',rock:'Roche',ghost:'Spectre',dragon:'Dragon',dark:'Ténèbres',steel:'Acier',fairy:'Fée'};
+ return types[type]||cap(type);
+}
+async function showPokemonInfo(p){
+ const dlg=$('infoDialog'), box=$('infoContent');
+ dlg.showModal();
+ box.innerHTML='<div class="loading"><span class="spinner"></span> Chargement des informations…</div>';
+ try{
+  const [r,frSpecies]=await Promise.all([
+   fetch(`https://pokeapi.co/api/v2/pokemon/${p.id}`),
+   getFrenchSpecies(p)
+  ]);
+  if(!r.ok)throw Error('Détails indisponibles');
+  const d=await r.json();
+  const description=frSpecies.description;
+  const types=d.types.map(t=>englishToFrenchType(t.type.name)).join(' / ');
+  const abilities=d.abilities.map(a=>cap(a.ability.name.replace(/-/g,' '))).join(', ');
+  const stats=d.stats.map(s=>`<div class="statrow"><span>${cap(s.stat.name.replace('special-attack','Attaque spéciale').replace('special-defense','Défense spéciale').replace('hp','PV').replace('attack','Attaque').replace('defense','Défense').replace('speed','Vitesse'))}</span><strong>${s.base_stat}</strong><div class="bar"><i style="width:${Math.min(100,s.base_stat/2.55)}%"></i></div></div>`).join('');
+  box.innerHTML=`
+   <div style="display:flex;gap:14px;align-items:center">
+    <img src="${imageUrl(p.id)}" alt="${frSpecies.name}" style="width:118px;height:118px;object-fit:contain;background:#10162a;border-radius:16px">
+    <div><div class="number">N° ${String(p.dex||p.id).padStart(4,'0')}</div><h2 style="margin:3px 0">${frSpecies.name}</h2><strong>${types}</strong><div class="note" style="margin:5px 0 0">Taille : ${(d.height/10).toFixed(1)} m · Poids : ${(d.weight/10).toFixed(1)} kg</div></div>
+   </div>
+   <h3 style="margin:16px 0 5px">Description du Pokédex</h3><p style="color:var(--muted);margin:0">${description}</p>
+   ${frSpecies.genus?`<p class="note" style="margin:7px 0 0">Catégorie : ${frSpecies.genus}</p>`:''}
+   <h3 style="margin:16px 0 5px">Capacités</h3><p style="color:var(--muted);margin:0">${abilities||'—'}</p>
+   <h3 style="margin:16px 0 7px">Statistiques de base</h3><div class="stats">${stats}</div>
+   <p class="note">Informations issues de PokéAPI. Les noms de certaines capacités peuvent apparaître en anglais.</p>`;
+ }catch(e){
+  box.innerHTML=`<h3>${pretty(p.name)}</h3><p class="note">Impossible de charger les informations. Vérifie ta connexion Internet et réessaie.</p><button class="btn" type="button" id="retryInfo">Réessayer</button>`;
+  const retry=$('retryInfo');if(retry)retry.onclick=()=>showPokemonInfo(p);
+ }
+}
+async function init(){
+ loadSaved();
+ try{
+  const [pokemonResponse,speciesResponse]=await Promise.all([
+   fetch('https://pokeapi.co/api/v2/pokemon?limit=2000'),
+   fetch('https://pokeapi.co/api/v2/pokemon-species?limit=2000')
+  ]);
+  if(!pokemonResponse.ok||!speciesResponse.ok)throw Error('API indisponible');
+  const [data,speciesData]=await Promise.all([pokemonResponse.json(),speciesResponse.json()]);
+  speciesOrder=speciesData.results.map((sp,index)=>({name:sp.name,index:index+1})).sort((a,b)=>b.name.length-a.name.length);
+  const speciesFor=name=>{
+   const found=speciesOrder.find(sp=>name===sp.name||name.startsWith(sp.name+'-'));
+   return found?found.index:99999;
+  };
+  allPokemon=data.results.map(p=>({name:p.name,id:getId(p.url),dex:speciesFor(p.name)}))
+   .filter(p=>p.id>0)
+   .sort((a,b)=>{if(a.dex!==b.dex)return a.dex-b.dex;const aBase=a.name===speciesOrder.find(sp=>sp.index===a.dex)?.name;const bBase=b.name===speciesOrder.find(sp=>sp.index===b.dex)?.name;if(aBase!==bBase)return aBase?-1:1;return a.id-b.id;});
+  $('status').hidden=true;$('grid').hidden=false;render();
+ }catch(e){$('status').className='empty';$('status').innerHTML='Impossible de charger la liste. Vérifie la connexion Internet puis recharge cette page.<br><br><button class="btn" onclick="location.reload()">Réessayer</button>'}
+}
+
+function openUnlockDialog(p){
+ pending=p;
+ $('dialogTitle').textContent='Débloquer : '+pretty(p.name);
+ $('pinInput').placeholder='••••';$('pinError').textContent='';$('pinInput').value='';
+ $('pinForm').querySelector('button[type=submit]').textContent='Débloquer';
+ $('pinForm').dataset.already='0';$('pinDialog').showModal();
+ setTimeout(()=>$('pinInput').focus(),100);
+}
+function unlockRandom(){
+ const locked=allPokemon.filter(p=>!saved[owner].includes(p.name));
+ if(!locked.length){alert('Tous les Pokémon de ce Pokédex sont déjà capturés !');return;}
+ const p=locked[Math.floor(Math.random()*locked.length)];
+ $('filter').value='all';$('search').value='';render();openUnlockDialog(p);
+}
+
+function updateCounts(){
+ for(const o of ['Papa','Lucie','Ethan'])$('count-'+o).textContent=`${saved[o].length} capturés / ${allPokemon.length} au total`;
+ $('progress').textContent=`${saved[owner].length} capturés / ${allPokemon.length} au total`;
+}
+function render(){
+ $('ownerTitle').textContent='Pokédex de '+owner;updateCounts();
+ const q=$('search').value.trim().toLowerCase(), f=$('filter').value;
+ let list;
+ if(f==='recent'){
+  const recentNames=[...saved[owner]].reverse().slice(0,12);
+  list=recentNames.map(name=>allPokemon.find(p=>p.name===name)).filter(Boolean);
+ }else{
+  list=allPokemon.filter(p=>{
+   const unlocked=saved[owner].includes(p.name);
+   const category=formCategory(p.name);
+   const matchesStatus=f==='all'||(f==='locked'&&!unlocked)||(f==='unlocked'&&unlocked);
+   const matchesCategory=['regional','mega','gmax'].includes(f)?category===f:matchesStatus;
+   const cached=speciesCache.get(p.dex||p.id);
+   const cachedName=cached&&typeof cached.then!=='undefined'?'':(cached?.name||'');
+   return (!q||p.name.replace(/-/g,' ').includes(q)||cachedName.toLowerCase().includes(q))&&matchesCategory;
+  });
+ }
+ $('grid').innerHTML='';
+ if(!list.length){$('grid').innerHTML='<div class="empty">Aucun Pokémon ne correspond à cette recherche.</div>';return}
+ const frag=document.createDocumentFragment();
+ for(const p of list){
+  const unlocked=saved[owner].includes(p.name);
+  const card=document.createElement('article');card.className='card'+(unlocked?' unlocked':'');
+  const img=document.createElement('img');img.src=imageUrl(p.id);img.alt=unlocked?pretty(p.name):'Silhouette Pokémon verrouillée';img.loading='lazy';img.onerror=()=>{img.onerror=null;img.src=`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png`};
+  img.addEventListener('click',()=>{if(unlocked){showPokemonInfo(p);return}openUnlockDialog(p)});
+  const number=document.createElement('div');number.className='number';number.textContent='N°'+String(p.dex||p.id).padStart(4,'0');
+  const name=document.createElement('div');name.className='name';name.textContent=unlocked?pretty(p.name):'?????';
+  if(unlocked){
+   name.textContent='…';
+   getFrenchSpecies(p).then(info=>{if(name.isConnected)name.textContent=info.name;}).catch(()=>{if(name.isConnected)name.textContent=pretty(p.name)});
+  }
+  const category=formCategory(p.name);
+  if(category!=='base'){const tag=document.createElement('div');tag.className='number';tag.textContent=unlocked?categoryLabel(category):'Forme secrète';tag.style.color=category==='mega'?'#ffd166':category==='gmax'?'#ff8db4':'#83c7ff';card.append(img,number,name,tag);}
+  const status=document.createElement('div');status.className='status';status.textContent=unlocked?'✨ Révélé':'🔒 Secret';
+  card.append(...(category==='base'?[img,number,name,status]:[status]));frag.append(card);
+ }
+ $('grid').append(frag);
+}
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{owner=b.dataset.owner;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));render()}));
+$('search').addEventListener('input',render);$('filter').addEventListener('change',render);
+$('randomUnlock').addEventListener('click',unlockRandom);
+$('recentBtn').addEventListener('click',()=>{$('search').value='';$('filter').value='recent';render();});
+$('cancel').addEventListener('click',()=> $('pinDialog').close());
+$('closeInfo').addEventListener('click',()=> $('infoDialog').close());
+$('pinForm').addEventListener('submit',e=>{e.preventDefault();if($('pinInput').value!==PIN){$('pinError').textContent='Code incorrect. Le Pokémon reste secret.';$('pinInput').value='';$('pinInput').focus();return}if(pending&&!saved[owner].includes(pending.name)){saved[owner].push(pending.name);persist();render()}$('pinDialog').close();$('pinInput').value='';});
+$('export').addEventListener('click',()=>{const blob=new Blob([JSON.stringify({version:1,saved},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mes-trois-pokedex.json';a.click();URL.revokeObjectURL(a.href)});
+$('importBtn').addEventListener('click',()=>$('importFile').click());
+$('importFile').addEventListener('change',async e=>{const file=e.target.files[0];if(!file)return;try{const d=JSON.parse(await file.text());const src=d.saved||d;for(const o of ['Papa','Lucie','Ethan'])if(Array.isArray(src[o]))saved[o]=[...new Set(src[o].filter(x=>typeof x==='string'))];persist();render();alert('Sauvegarde importée.')}catch(err){alert('Fichier de sauvegarde invalide.')}e.target.value=''});
+$('reset').addEventListener('click',()=>{if(confirm('Réinitialiser le Pokédex de '+owner+' ? Cette action effacera ses Pokémon révélés sur cet appareil.')){saved[owner]=[];persist();render()}});
+loadSaved();init();
+</script>
+</body></html>
